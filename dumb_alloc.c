@@ -11,7 +11,7 @@ typedef struct block_meta{
 
 block_meta *head = NULL; 
 void split_block(block_meta *block,size_t size) {
-	block_meta *new_block = (block_meta *)((char *)(block + 1) * size); 
+	block_meta *new_block = (block_meta *)((char *)(block + 1) + size); 
 	new_block->size = block->size - size - sizeof(block_meta); 
 	new_block->free = 1; 
 	new_block->next = block->next; 
@@ -69,6 +69,10 @@ int main(){
 	c[1] = '\0';
 	printf("c = %p, content =%s\n",c,c); 
 
+	my_free(c); 
+	char *e = my_malloc(4);
+	printf("e = %p\n",e);
+
 	block_meta *current = head; 
 	int i =0; 
 	while(current){
@@ -76,11 +80,5 @@ int main(){
 		current = current->next;
 		i++;
 	}
-	my_free(b);
-	printf("b = %p , content =%s\n",b,b);
-	my_free(a); 
-	my_free(c);
-	char* d = my_malloc(40);
-	printf("d = %p\n",d);
 	return 0;
 }
