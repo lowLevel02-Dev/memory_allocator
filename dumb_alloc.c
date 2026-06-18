@@ -8,11 +8,22 @@ typedef struct block_meta{
 } block_meta;
 
 block_meta *head = NULL; 
+void split_block(block_meta *block,size_t size) {
+	block_meta *new_block = (block_meta *)((char *)(block + 1) * size); 
+	new_block->size = block->size - size - sizeof(block_meta); 
+	new_block->free = 1; 
+	new_block->next = block->next; 
 
+	block->size = size; 
+	block->next = new_block;
+}
 void *my_malloc(size_t size){
 	block_meta *current = head; 
 	while(current){
 		if(current->free && current->size >= size){
+			if(current->size >= size + sizeof(block_meta)){
+				split_block(current , size);
+			}
 			current->free = 0; 
 			return (void*)(current + 1); 
 		}
@@ -35,13 +46,11 @@ void *my_malloc(size_t size){
 	}
 	return (void*)(block+1);
 }
-
 void my_free(void *ptr){
 	if(!ptr) return; 
 	block_meta *block = (block_meta *)ptr -1;
 	block->free = 1;
 }
-
 int main(){
 	char *a = my_malloc(8); 
        	a[0] = 'A'; 
