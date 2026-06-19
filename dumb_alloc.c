@@ -51,6 +51,10 @@ void *my_malloc(size_t size){
 void my_free(void *ptr){
 	if(!ptr) return; 
 	block_meta *block = (block_meta *)ptr -1;
+	if(block->next && block->next->free){
+		block->size = block->size + sizeof(block_meta) + block->next->size; 
+		block->next = block->next->next;
+	}
 	block->free = 1;
 }
 int main(){
