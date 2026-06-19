@@ -1,8 +1,10 @@
-//custom_memory_allocator_using_C 
-
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stddef.h>
+
+void *malloc(size_t size); 
+void free(void *ptr);
+void *calloc(size_t nmemb, size_t size); 
+void *realloc(void *ptr, size_t size);
 
 typedef struct block_meta{
 	size_t size; 
@@ -21,6 +23,7 @@ void split_block(block_meta *block,size_t size) {
 	block->next = new_block;
 }
 void *malloc(size_t size){
+	write(2, "M", 1);
 	block_meta *current = head; 
 	while(current){
 		if(current->free && current->size >= size){
@@ -90,6 +93,9 @@ void free(void *ptr){
 		block->next = block->next->next;
 	}
 }
+
+#ifdef TESTING
+#include <stdio.h>
 int main(){
 	char *a = malloc(8);
 	char *b = malloc(32);
@@ -115,3 +121,4 @@ int main(){
 
 	return 0;
 }
+#endif
