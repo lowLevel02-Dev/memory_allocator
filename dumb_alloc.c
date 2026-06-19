@@ -15,6 +15,8 @@ typedef struct block_meta{
 } block_meta;
 
 block_meta *head = NULL; 
+static pthread_mutex_t alloc_lock = PTHREAD_MUTEX_INITIALIZER;
+
 void split_block(block_meta *block,size_t size) {
 	block_meta *new_block = (block_meta *)((char *)(block + 1) + size); 
 	new_block->size = block->size - size - sizeof(block_meta); 
@@ -24,8 +26,6 @@ void split_block(block_meta *block,size_t size) {
 	block->size = size; 
 	block->next = new_block;
 }
-
-static pthread_mutex_t alloc_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void *malloc(size_t size){
 	if(size == 0) return NULL; 
