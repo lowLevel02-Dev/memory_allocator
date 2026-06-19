@@ -1,5 +1,7 @@
 #include <unistd.h>
 #include <stddef.h>
+#include <sys/mman.h>
+#include <pthread.h>
 
 void *malloc(size_t size); 
 void free(void *ptr);
@@ -23,6 +25,8 @@ void split_block(block_meta *block,size_t size) {
 	block->next = new_block;
 }
 void *malloc(size_t size){
+	if(size == 0) return NULL; 
+	pthread_mutex_lock(&alloc_lock);
 	write(2, "M", 1);
 	block_meta *current = head; 
 	while(current){
@@ -35,8 +39,8 @@ void *malloc(size_t size){
 		}
 		current = current->next;
 	}
-	block_meta *block = sbrk(sizeof(block_meta) + size); 
-	if(block == (void*)-1) return NULL; 
+	block_meta *block = mmap(NULL, sizeof(block_meta) + size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,0);
+	if(block == MAP_FAILED) return NULL;
 	block->size = size; 
 	block->free = 0; 
 	block->next = NULL; 
@@ -50,6 +54,7 @@ void *malloc(size_t size){
 		}
 		current->next = block;
 	}
+	pthread_mutex_unlock(&alloc_lock);
 	return (void*)(block+1);
 }
 
@@ -86,12 +91,14 @@ void *realloc(void *ptr, size_t size){
 
 void free(void *ptr){
 	if(!ptr) return; 
+	pthread_lock_mutex(&alloc_lock);
 	block_meta *block = (block_meta *)ptr -1;
 	block->free = 1;
 	if(block->next && block->next->free){
 		block->size = block->size + sizeof(block_meta) + block->next->size; 
 		block->next = block->next->next;
 	}
+	pthread_mutex_unlock(&alloc_lock);
 }
 
 #ifdef TESTING
