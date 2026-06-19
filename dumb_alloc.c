@@ -19,7 +19,7 @@ void split_block(block_meta *block,size_t size) {
 	block->size = size; 
 	block->next = new_block;
 }
-void *my_malloc(size_t size){
+void malloc(size_t size){
 	block_meta *current = head; 
 	while(current){
 		if(current->free && current->size >= size){
@@ -48,32 +48,37 @@ void *my_malloc(size_t size){
 	}
 	return (void*)(block+1);
 }
-void my_free(void *ptr){
+void free(void *ptr){
 	if(!ptr) return; 
 	block_meta *block = (block_meta *)ptr -1;
+	block->free = 1;
 	if(block->next && block->next->free){
 		block->size = block->size + sizeof(block_meta) + block->next->size; 
 		block->next = block->next->next;
 	}
-	block->free = 1;
 }
 int main(){
-	char *x = my_malloc(100);
-	my_free(x); 
+	char *a = malloc(8);
+	char *b = malloc(32);
+	block_meta *cur = head; 
+	int i =0; 
 
-	block_meta *block = (block_meta *)x -1;
+	printf("------before coalescing------\n");
+	while(cur){
+		printf("Block %d: addr = %p , size = %zu , free = %d\n",i , cur , cur->size, cur->free);
+		cur = cur->next; i++;
+	}
 
-	block->size = (size_t)-1; 
-	block->free = 1;
+	free(b);
+	free(a);
 
-	printf("Block size set to: %zu\n", block->size);
-
-	size_t request = (size_t)-1 - 10; 
-
-	printf("Requesting size: %zu\n", request);
-	void  *result = my_malloc(request); 
-	printf("Result pointer: %p\n", result); 
-	printf("Block size after: %zu , free= %d\n", block->size, block->free);
+	printf("------after coalescing------\n");
+	cur = head; 
+	i = 0; 
+	while(cur){
+		printf("Block %d: addr = %p , size = %zu , free = %d\n",i , cur , cur->size, cur->free);
+		cur = cur->next; i++;
+	}
 
 	return 0;
 }
