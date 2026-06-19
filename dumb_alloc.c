@@ -24,6 +24,9 @@ void split_block(block_meta *block,size_t size) {
 	block->size = size; 
 	block->next = new_block;
 }
+
+static pthread_mutex_t alloc_lock = PTHREAD_MUTEX_INITIALIZER;
+
 void *malloc(size_t size){
 	if(size == 0) return NULL; 
 	pthread_mutex_lock(&alloc_lock);
@@ -35,12 +38,16 @@ void *malloc(size_t size){
 				split_block(current , size);
 			}
 			current->free = 0; 
+			pthread_mutex_unlock(&alloc_lock);
 			return (void*)(current + 1); 
 		}
 		current = current->next;
 	}
 	block_meta *block = mmap(NULL, sizeof(block_meta) + size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1,0);
-	if(block == MAP_FAILED) return NULL;
+	if(block == MAP_FAILED){
+		pthread_mutex_unlock(&alloc_lock);
+		return NULL;
+	}
 	block->size = size; 
 	block->free = 0; 
 	block->next = NULL; 
