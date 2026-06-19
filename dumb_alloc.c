@@ -19,7 +19,7 @@ void split_block(block_meta *block,size_t size) {
 	block->size = size; 
 	block->next = new_block;
 }
-void malloc(size_t size){
+void *malloc(size_t size){
 	block_meta *current = head; 
 	while(current){
 		if(current->free && current->size >= size){
