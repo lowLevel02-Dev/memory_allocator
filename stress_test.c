@@ -8,6 +8,7 @@ int main(){
 		for(int i = 0 ; i < 10000; i++){
 			num = rand() % 1017 + 8;
 			ptrs[i] = malloc(num);
+			((char*)ptrs[i])[0] = 1;
 		}
 		for(int i = 0 ; i < 10000; i++){
 			free(ptrs[i]);
